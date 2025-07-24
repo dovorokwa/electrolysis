@@ -1,1 +1,1989 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reaction Rate Factors & Maxwell-Boltzmann Distribution</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@1.4.0/dist/chartjs-plugin-annotation.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        /* --- Google Font Import --- */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
 
+        /* --- Root Variables for Theming --- */
+        :root {
+            --bg-dark-deep: #1a202c;
+            --bg-dark-main: #2d3748;
+            --bg-dark-light: #4a5568;
+            --border-color: #4a5568;
+            --text-primary: #e2e8f0;
+            --text-secondary: #a0aec0;
+            --font-family: 'Poppins', sans-serif;
+            --accent-blue: #4fd1c5;
+            --accent-orange: #f6ad55;
+            --accent-purple: #9f7aea;
+            --accent-red: #e53e3e;
+            --accent-yellow: #faf089;
+        }
+
+        /* --- General Body & Layout Styles --- */
+        body {
+            font-family: var(--font-family);
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: var(--bg-dark-deep);
+            color: var(--text-primary);
+        }
+
+        .container {
+            background-color: var(--bg-dark-main);
+            border-radius: 16px;
+            padding: 25px 40px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+        }
+
+        .factor {
+            margin-bottom: 40px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 30px;
+        }
+        .factor:last-child {
+            border-bottom: none;
+        }
+
+        h1 {
+            color: var(--text-primary);
+            text-align: center;
+            font-size: 2.8em;
+            letter-spacing: -1px;
+            margin-bottom: 5px;
+        }
+        
+        .header-sub {
+            text-align: center;
+            color: var(--accent-blue);
+            font-size: 1.1em;
+            margin-bottom: 40px;
+        }
+
+        h2 {
+            color: var(--accent-blue);
+            font-size: 2.2em;
+            border-bottom: 2px solid var(--accent-blue);
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }
+
+        /* --- Animation & Controls --- */
+        .animation-container {
+            width: 100%;
+            height: 250px;
+            background-color: #000;
+            background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 20px 20px;
+            border-radius: 8px;
+            position: relative;
+            margin: 15px 0;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+        }
+        
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            transition: transform 0.1s linear;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            gap: 15px;
+            background-color: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        .rate-display {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: var(--accent-yellow);
+            background-color: rgba(0,0,0,0.3);
+            padding: 8px 12px;
+            border-radius: 6px;
+        }
+        
+        button {
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 600;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2);
+        }
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2);
+        }
+        button:disabled {
+            background-color: var(--bg-dark-light);
+            color: #999;
+            cursor: not-allowed;
+            transform: translateY(0);
+            box-shadow: none;
+        }
+        .start-btn { background-color: var(--accent-blue); }
+        .start-btn:hover:not(:disabled) { background-color: #2c7a7b; }
+        .stop-btn { background-color: var(--accent-red); }
+        .stop-btn:hover:not(:disabled) { background-color: #c53030; }
+        .state-toggle { background-color: var(--accent-purple); }
+        .state-toggle:hover { background-color: #805ad5; }
+        
+        .slider-container {
+            flex-grow: 1;
+            min-width: 200px;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            cursor: pointer;
+        }
+
+        /* --- Explanation & Theory Boxes --- */
+        .explanation {
+            background-color: rgba(0,0,0,0.1);
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border-left: 4px solid var(--accent-orange);
+        }
+        
+        .theory {
+            font-size: 1em;
+            color: var(--text-secondary);
+            margin-top: 20px;
+            border-top: 1px dashed var(--border-color);
+            padding-top: 20px;
+        }
+        .theory h3 {
+             font-size: 1.2em;
+             color: var(--accent-orange);
+             text-align: left;
+             margin-top: 0;
+             margin-bottom: 10px;
+        }
+
+        .exam-tip {
+            background-color: rgba(250, 240, 137, 0.1);
+            color: var(--accent-yellow);
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 20px;
+            font-size: 1em;
+            border: 1px solid var(--accent-yellow);
+        }
+        .exam-tip strong {
+             color: var(--accent-yellow);
+        }
+
+        /* --- Pressure Animation Piston --- */
+        #pressureAnim {
+            display: flex;
+            align-items: flex-start; /* Piston at top */
+            justify-content: center;
+            border-bottom-left-radius: 50px;
+            border-bottom-right-radius: 50px;
+            border-top: none;
+        }
+        .piston {
+            width: 100%;
+            background: linear-gradient(#6b7280, #4b5563);
+            border: 4px solid #9ca3af;
+            border-radius: 4px;
+            height: 20px; /* Piston thickness */
+            position: absolute;
+            top: 0;
+            transition: top 0.5s ease;
+        }
+        
+        /* Maxwell-Boltzmann Styles */
+        .chart-container {
+            position: relative;
+            height: 450px;
+            margin: 25px 0;
+            background: var(--bg-dark-main);
+            padding: 10px;
+            border-radius: 8px;
+        }
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            font-size: 0.95em;
+        }
+        .legend-color {
+            width: 18px;
+            height: 18px;
+            margin-right: 8px;
+            border-radius: 4px;
+        }
+        .info-panel {
+            background-color: rgba(0,0,0,0.2);
+            padding: 18px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border-left: 4px solid var(--accent-blue);
+        }
+        .info-value {
+            font-weight: bold;
+            color: var(--accent-yellow);
+        }
+
+        /* --- Energy Profile Styles --- */
+        .energy-profiles {
+            margin-bottom: 30px;
+        }
+        .profile-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+        .profile {
+            background-color: var(--bg-dark-light);
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .profile-explanation {
+            background-color: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            border-left: 4px solid var(--accent-purple);
+        }
+        
+        /* --- Exam Practice Styles --- */
+        .exam-question {
+            background-color: rgba(0,0,0,0.2);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            border-left: 4px solid var(--accent-purple);
+        }
+        .exam-question h3 {
+            color: var(--accent-purple);
+            font-size: 1.5em;
+            margin-top:0;
+        }
+        .exam-question h4 {
+            color: var(--text-primary);
+            font-size: 1.2em;
+            margin-top: 15px;
+        }
+        .question-stem {
+            margin-bottom: 15px;
+            background-color: rgba(0,0,0,0.1);
+            padding: 10px;
+            border-radius: 6px;
+        }
+        .solution {
+            display: none;
+            margin-top: 15px;
+            padding: 15px;
+            background-color: rgba(0,0,0,0.3);
+            border-radius: 6px;
+        }
+        .mcq-option {
+            display: block;
+            padding: 10px;
+            background-color: var(--bg-dark-light);
+            margin: 5px 0;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .mcq-option:hover {
+            background-color: var(--border-color);
+        }
+        .mcq-feedback {
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .graph-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .graph-cell {
+            background-color: #fff;
+            padding: 5px;
+            border-radius: 5px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: var(--bg-dark-light);
+        }
+        
+        /* --- MOBILE RESPONSIVENESS --- */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            .container {
+                padding: 15px;
+            }
+            h1 {
+                font-size: 2em;
+            }
+            h2 {
+                font-size: 1.6em;
+            }
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .profile-container, .graph-grid {
+                grid-template-columns: 1fr;
+            }
+            .exam-question {
+                padding: 15px;
+            }
+            h4 {
+                font-size: 1.1em;
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Factors Affecting Reaction Rates</h1>
+        <p class="header-sub">CAPS Physical Sciences Grade 12</p>
+        
+        <!-- FACTOR ANIMATIONS (As before) -->
+        <div class="factor">
+            <h2>1. Concentration</h2>
+            <div class="controls">
+                <div>
+                    <button class="start-btn" onclick="animations.concentration.start()">Start</button>
+                    <button class="stop-btn" onclick="animations.concentration.stop()">Stop</button>
+                    <button onclick="animations.concentration.reset()">Reset</button>
+                </div>
+                <div class="slider-container">
+                    <span>Particles:</span> <input type="range" id="concentrationSlider" min="10" max="80" value="30" oninput="animations.concentration.updateCount(this.value)">
+                </div>
+                <div id="concentrationRate" class="rate-display">Products: 0</div>
+            </div>
+            <div class="animation-container" id="concentrationAnim"></div>
+            <div class="explanation">
+                <p><strong>Definition:</strong> Concentration refers to the amount of a substance (reactant) in a given volume.</p>
+                <div class="exam-tip">
+                    <strong>Exam Tip:</strong> In exams, you must explain *how* concentration changes the rate using Collision Theory. It's not enough to just say "it increases".
+                </div>
+                <div class="theory">
+                    <h3>Collision Theory Explanation:</h3> 
+                    <ol>
+                        <li>Increasing the concentration of a solution increases the number of reactant particles per unit volume.</li>
+                        <li>With more particles in the same space, the frequency of collisions between reactant particles increases.</li>
+                        <li>This leads to more <strong>effective collisions</strong> per unit time.</li>
+                        <li>Therefore, the rate of reaction increases.</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+        
+        <div class="factor">
+            <h2>2. Temperature</h2>
+             <div class="controls">
+                <div>
+                    <button class="start-btn" onclick="animations.temperature.start()">Start</button>
+                    <button class="stop-btn" onclick="animations.temperature.stop()">Stop</button>
+                    <button onclick="animations.temperature.reset()">Reset</button>
+                </div>
+                <div class="slider-container">
+                    <span>Temp:</span> <input type="range" id="temperatureSlider" min="1" max="10" value="3" oninput="animations.temperature.updateSpeed(this.value)">
+                </div>
+                <div id="temperatureRate" class="rate-display">Products: 0</div>
+            </div>
+            <div class="animation-container" id="temperatureAnim"></div>
+            <div class="explanation">
+                <p><strong>Definition:</strong> Temperature is a measure of the average kinetic energy of the particles in a substance.</p>
+                 <div class="exam-tip">
+                    <strong>Exam Tip:</strong> This is a two-part explanation. Remember to mention both the increased collision frequency AND the increase in energy per collision.
+                </div>
+                <div class="theory">
+                    <h3>Collision Theory Explanation:</h3>
+                    <ol>
+                        <li>Increasing the temperature increases the average kinetic energy of the particles.</li>
+                        <li>Particles move faster, leading to more frequent collisions.</li>
+                        <li>More importantly, a greater proportion of particles now possess the minimum kinetic energy required for a reaction (activation energy).</li>
+                         <li>Therefore, the frequency of <strong>effective collisions</strong> increases, and the reaction rate increases.</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+        
+        <div class="factor">
+            <h2>3. State of Division (Surface Area)</h2>
+            <div class="controls">
+                 <div>
+                    <button class="start-btn" onclick="animations.surface.start()">Start</button>
+                    <button class="stop-btn" onclick="animations.surface.stop()">Stop</button>
+                    <button class="state-toggle" onclick="animations.surface.toggleForm()" id="surfaceToggleBtn">Use Powder</button>
+                </div>
+                <div id="surfaceRate" class="rate-display">Reacted: 0</div>
+            </div>
+            <div class="animation-container" id="surfaceAnim"></div>
+            <div class="explanation">
+                <p><strong>Definition:</strong> For reactions involving a solid reactant, the state of division refers to how finely the solid is broken up. A powder has a much larger surface area than a single solid chunk of the same mass.</p>
+                 <div class="exam-tip">
+                    <strong>Exam Tip:</strong> This factor is about exposure. Explain why a powder reacts faster than a chunk by focusing on the number of particles that are available to collide.
+                </div>
+                <div class="theory">
+                    <h3>Collision Theory Explanation:</h3>
+                    <ol>
+                        <li>Breaking a solid into smaller pieces (increasing its state of division) increases the total surface area exposed.</li>
+                        <li>A larger surface area means more of the solid's particles are available for collisions with the other reactants.</li>
+                        <li>This increases the frequency of collisions.</li>
+                        <li>Therefore, the frequency of <strong>effective collisions</strong> per unit time increases, and the reaction rate increases.</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+        
+        <div class="factor">
+            <h2>4. Pressure (For Gases)</h2>
+             <div class="controls">
+                <div>
+                    <button class="start-btn" onclick="animations.pressure.start()">Start</button>
+                    <button class="stop-btn" onclick="animations.pressure.stop()">Stop</button>
+                    <button onclick="animations.pressure.reset()">Reset</button>
+                </div>
+                <div class="slider-container">
+                   <span>Pressure:</span> <input type="range" id="pressureSlider" min="0" max="100" value="20" oninput="animations.pressure.updatePressure(this.value)">
+                </div>
+                 <div id="pressureRate" class="rate-display">Products: 0</div>
+            </div>
+            <div class="animation-container" id="pressureAnim"><div class="piston" id="piston"></div></div>
+            <div class="explanation">
+                <p><strong>Note:</strong> This factor is only relevant for reactions involving gases.</p>
+                 <div class="exam-tip">
+                    <strong>Exam Tip:</strong> Think of pressure for gases as being equivalent to concentration for solutions. Higher pressure means more particles in the same volume.
+                </div>
+                <div class="theory">
+                    <h3>Collision Theory Explanation:</h3>
+                    <ol>
+                        <li>Increasing the pressure on a gaseous system decreases the volume the gas particles occupy.</li>
+                        <li>This increases the concentration of the gas (more particles per unit volume).</li>
+                        <li>With particles closer together, the frequency of collisions increases.</li>
+                        <li>Therefore, the frequency of <strong>effective collisions</strong> per unit time increases, and the reaction rate increases.</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+        
+        <div class="factor">
+            <h2>5. Presence of a Catalyst</h2>
+            <div class="controls">
+                <div>
+                    <button class="start-btn" onclick="animations.catalyst.start()">Start</button>
+                    <button class="stop-btn" onclick="animations.catalyst.stop()">Stop</button>
+                    <button class="state-toggle" onclick="animations.catalyst.toggleCatalyst()" id="catalystToggleBtn">Add Catalyst</button>
+                </div>
+                 <div id="catalystRate" class="rate-display">Products: 0</div>
+            </div>
+            <div class="animation-container" id="catalystAnim"></div>
+
+             <div class="energy-profiles">
+                <h3>Energy Profile Diagrams</h3>
+                <div class="controls" style="justify-content: center;">
+                    <button class="state-toggle" onclick="toggleCatalystEffect()" id="catalystEffectToggleBtn">Toggle Catalyst</button>
+                </div>
+                <div class="profile-container">
+                    <div class="profile" id="exothermicProfile">
+                        <h4>Exothermic Reaction</h4>
+                        <canvas id="exothermicChart"></canvas>
+                        <div class="profile-explanation">
+                            <h5 style="color: var(--text-primary); font-weight: bold;">Theory:</h5>
+                            <p>Energy is released. The products have less potential energy than the reactants.</p>
+                            <p>Enthalpy Change (<span style="font-style: italic;">ΔH</span>) is <strong style="color: var(--accent-red);">negative</strong>.</p>
+                            <p id="exoDeltaH"></p>
+                        </div>
+                    </div>
+                    <div class="profile" id="endothermicProfile">
+                        <h4>Endothermic Reaction</h4>
+                        <canvas id="endothermicChart"></canvas>
+                         <div class="profile-explanation">
+                            <h5 style="color: var(--text-primary); font-weight: bold;">Theory:</h5>
+                            <p>Energy is absorbed. The products have more potential energy than the reactants.</p>
+                            <p>Enthalpy Change (<span style="font-style: italic;">ΔH</span>) is <strong style="color: var(--accent-blue);">positive</strong>.</p>
+                            <p id="endoDeltaH"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="explanation">
+                <p><strong>Definition:</strong> A catalyst is a substance that increases the rate of a chemical reaction without being consumed in the process.</p>
+                 <div class="exam-tip">
+                    <strong>Exam Tip:</strong> The key phrase for catalysts is "provides an alternative reaction pathway with a lower activation energy". This is a different mechanism from the other factors.
+                </div>
+                <div class="theory">
+                    <h3>Mechanism Explanation:</h3>
+                    <ol>
+                        <li>A catalyst provides an alternative reaction pathway (mechanism) that has a lower activation energy (Ea).</li>
+                        <li>Because the activation energy is lower, a greater proportion of the reactant particles have sufficient energy to react when they collide.</li>
+                        <li>This increases the frequency of <strong>effective collisions</strong>.</li>
+                        <li>Therefore, the reaction rate increases. A catalyst is not used up in the reaction.</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+        
+        <div class="factor">
+            <h2>Maxwell-Boltzmann Distribution</h2>
+             <div class="legend">
+                 <div class="legend-item">
+                     <div class="legend-color" style="background-color: #3498db;"></div>
+                     <span>Lower Temperature (300 K)</span>
+                 </div>
+                 <div class="legend-item">
+                     <div class="legend-color" style="background-color: #e74c3c;"></div>
+                     <span>Higher Temperature (<span id="currentTemp">500</span> K)</span>
+                 </div>
+                 <div class="legend-item">
+                     <div class="legend-color" style="border-left: 3px dashed var(--accent-red);"></div>
+                     <span>Activation Energy (E<sub>a</sub>)</span>
+                 </div>
+                 <div class="legend-item">
+                     <div class="legend-color" style="background-color: rgba(79, 209, 197, 0.25);"></div>
+                     <span>Molecules with E ≥ E<sub>a</sub></span>
+                 </div>
+             </div>
+
+             <div class="controls">
+                 <div class="slider-container">
+                     <label for="mb_tempSlider">Temperature: <span id="tempValue" class="font-bold">500</span> K</label>
+                     <input type="range" id="mb_tempSlider" min="200" max="2000" value="500" step="20">
+                 </div>
+                 <div class="slider-container">
+                     <label for="mb_eaSlider">Activation Energy: <span id="eaValue" class="font-bold">1000</span> m/s</label>
+                     <input type="range" id="mb_eaSlider" min="400" max="2000" value="1000" step="10">
+                 </div>
+             </div>
+
+             <div class="chart-container">
+                 <canvas id="mbChart"></canvas>
+             </div>
+
+             <div class="info-panel">
+                 <p>At <span class="info-value" id="displayTemp">500 K</span> with E<sub>a</sub> speed = <span class="info-value" id="displayEaSpeed">1000 m/s</span>:</p>
+                 <p>• <span class="info-value" id="percentReactive">XX.XX%</span> of molecules have sufficient energy to react</p>
+             </div>
+
+             <div class="explanation">
+                 <div class="theory">
+                     <h3>CAPS Theory: Maxwell-Boltzmann Distribution</h3>
+                     <p>The distribution shows the range of molecular speeds in a gas at a given temperature. Key features:</p>
+                     <ul>
+                         <li>The peak represents the most probable speed.</li>
+                         <li>Higher temperatures shift the curve <strong>right</strong> and make it <strong>flatter</strong>.</li>
+                         <li>The area under each curve represents the <strong>total number of molecules</strong> and remains constant.</li>
+                         <li>The shaded region shows the fraction of particles that have sufficient kinetic energy to react (energy ≥ E<sub>a</sub>).</li>
+                     </ul>
+                     
+                     <p>The fraction of molecules with speed <em>v</em> is given by:</p>
+                     <p style="text-align: center;">
+                         \( f(v) = 4\pi \left( \frac{m}{2\pi kT} \right)^{3/2} v^2 e^{-mv^2/2kT} \)
+                     </p>
+                     <p>where <em>m</em> = molecular mass, <em>k</em> = Boltzmann constant, <em>T</em> = temperature.</p>
+                 </div>
+
+                 <div class="exam-tip">
+                     <h3>Exam Tips</h3>
+                     <p><strong>When sketching Maxwell-Boltzmann distributions:</strong></p>
+                     <ol>
+                         <li>Label both axes clearly (Number of molecules vs. Kinetic energy/speed).</li>
+                         <li>Show that the higher temperature curve is flatter and shifted to the right.</li>
+                         <li>Mark E<sub>a</sub> with a vertical line.</li>
+                         <li>Shade the area for molecules with E ≥ E<sub>a</sub> for both curves to compare.</li>
+                         <li>State that the total area under each curve is equal.</li>
+                     </ol>
+                 </div>
+            </div>
+        </div>
+
+        <!-- EXAM PRACTICE SECTION -->
+        <div class="factor">
+            <h2 style="color: var(--accent-purple);">Exam Practice Questions</h2>
+            
+            <div class="exam-question">
+                <h3>Question 1: Multiple Choice</h3>
+                <div id="mcq-container"></div>
+            </div>
+
+            <div class="exam-question">
+                <h3>Question 2: Graphing & Calculations</h3>
+                <div class="question-stem">
+                    <p>Zinc granules are added to 100 cm³ of a 0.2 mol·dm⁻³ hydrochloric acid solution. The reaction rate is followed by measuring the mass loss. After completion, 0.12 g of zinc did not react.</p>
+                </div>
+                <h4>2.1. Which reactant is the limiting reagent?</h4>
+                <button onclick="toggleSolution('q2-1')">Show Answer</button>
+                <div id="q2-1" class="solution"><p>Hydrochloric acid / HCl</p></div>
+
+                <h4>2.2. Give a reason for the loss in mass.</h4>
+                <button onclick="toggleSolution('q2-2')">Show Answer</button>
+                <div id="q2-2" class="solution"><p>Hydrogen gas (H₂) escapes from the unsealed flask.</p></div>
+
+                <h4>2.3 & 2.4. Sketch graphs of mass of zinc vs. time.</h4>
+                <p>Graph P represents the reaction. Graph Q represents the same reaction at a HIGHER temperature.</p>
+                <button onclick="drawQ2Graph()">Draw Animated Graph</button>
+                <div class="chart-container" style="height: 300px; background-color: white;"><canvas id="q2Graph"></canvas></div>
+
+                <h4>2.6. Calculate the initial mass of zinc.</h4>
+                <button onclick="toggleSolution('q2-6')">Show Answer</button>
+                <div id="q2-6" class="solution">
+<pre>
+1. Find moles of HCl used:
+   c = n / V  =>  0.2 = n / 0.1
+   n(HCl) = 0.02 mol
+
+2. Use stoichiometry to find moles of Zn reacted:
+   Ratio Zn:HCl is 1:2
+   n(Zn reacted) = ½ * n(HCl) = 0.01 mol
+
+3. Convert moles of reacted Zn to mass:
+   m = n * M  =>  m = 0.01 * 65
+   m(Zn reacted) = 0.65 g
+
+4. Calculate initial mass:
+   Initial mass = mass reacted + mass remaining
+   Initial mass = 0.65 g + 0.12 g = 0.77 g
+</pre>
+                </div>
+            </div>
+
+            <div class="exam-question">
+                <h3>Question 3: Data Interpretation</h3>
+                <div class="question-stem">
+                    <p>Learners use impure powdered calcium carbonate and excess HCl. They perform four experiments with different conditions. \( CaCO_{3(s)} + 2HCl_{(aq)} \rightarrow CaCl_{2(aq)} + H_{2}O_{(l)} + CO_{2(g)} \)</p>
+                    <table>
+                        <thead><tr><th></th><th>Exp 1</th><th>Exp 2</th><th>Exp 3</th><th>Exp 4</th></tr></thead>
+                        <tbody>
+                            <tr><td>Conc. of acid (mol·dm⁻³)</td><td>1</td><td>0.5</td><td>1</td><td>1</td></tr>
+                            <tr><td>Mass of impure CaCO₃ (g)</td><td>15</td><td>15</td><td>15</td><td>25</td></tr>
+                            <tr><td>Initial Temp (°C)</td><td>30</td><td>30</td><td>40</td><td>40</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <h4>3.1. Define the term reaction rate in words.</h4>
+                <button onclick="toggleSolution('q3-1')">Show Answer</button>
+                <div id="q3-1" class="solution"><p>The change in concentration of products or reactants per unit time.</p></div>
+                
+                <h4>3.2. For the comparison between experiments 1 and 3, write down the independent and dependent variables.</h4>
+                <button onclick="toggleSolution('q3-2')">Show Answer</button>
+                <div id="q3-2" class="solution">
+                    <p><b>Independent variable:</b> Temperature</p>
+                    <p><b>Dependent variable:</b> Rate of reaction / Volume of gas formed per unit time.</p>
+                </div>
+                
+                <h4>3.3. Use the collision theory to explain why the reaction rate in experiment 4 will be higher than in experiment 3.</h4>
+                <button onclick="toggleSolution('q3-3')">Show Answer</button>
+                <div id="q3-3" class="solution"><p>Experiment 4 uses a larger mass (25g) of impure CaCO₃ than experiment 3 (15g). Assuming the powder has a similar state of division, this provides a larger surface area. A larger surface area increases the frequency of effective collisions per unit time, thus increasing the reaction rate.</p></div>
+
+                 <h4>3.4. Which graph (A, B, C or D from the paper) represents experiment 1? Explain.</h4>
+                 <button onclick="drawQ3Graph()">Draw Graph and Show Answer</button>
+                 <div class="chart-container" style="height: 300px; background-color: white; display: none;" id="q3GraphContainer">
+                    <canvas id="q3Graph"></canvas>
+                 </div>
+                 <div id="q3-4" class="solution">
+                    <p><strong>Correct Answer: C</strong></p>
+                    <ul>
+                        <li><b>Exp 1 vs Exp 2:</b> Exp 1 has a higher concentration, so it's faster than Exp 2. (Graph C is steeper than graph D).</li>
+                        <li><b>Exp 1 vs Exp 3:</b> Exp 1 is at a lower temperature, so it's slower than Exp 3. (Graph C is less steep than graph B).</li>
+                        <li><b>Amount of Gas:</b> Exp 4 has more reactant (25g vs 15g), so it produces more gas (Graph A). Exp 1, 2, and 3 use the same amount of limiting reactant so they produce the same total volume of gas.</li>
+                        <li><b>Conclusion:</b> Graph C has a moderate rate and matches the expected outcome for Experiment 1 relative to the others.</li>
+                    </ul>
+                 </div>
+                 <h4>3.5. In Exp 4, 4.5 dm³ of gas is formed at 40°C (molar volume = 25.7 dm³). Calculate the mass of impurities in the 25g of CaCO₃.</h4>
+                 <button onclick="toggleSolution('q3-5')">Show Answer</button>
+                 <div id="q3-5" class="solution">
+<pre>
+1. Find moles of CO₂ produced:
+   n = V / Vm => n = 4.5 / 25.7
+   n(CO₂) = 0.175 mol
+
+2. Use stoichiometry to find moles of CaCO₃ reacted:
+   Ratio CaCO₃:CO₂ is 1:1
+   n(CaCO₃ reacted) = 0.175 mol
+
+3. Convert moles of reacted CaCO₃ to mass:
+   m = n * M => m = 0.175 * 100
+   m(CaCO₃ reacted) = 17.5 g
+
+4. Calculate mass of impurities:
+   Mass impurities = Total mass - mass pure
+   Mass impurities = 25 g - 17.5 g = 7.5 g
+</pre>
+                </div>
+            </div>
+
+            <div class="exam-question">
+                <h3>Question 4: Data Analysis</h3>
+                <div class="question-stem">
+                    <p>Learners react excess HCl with 1.2g Zn in five experiments.</p>
+                     <table>
+                        <thead><tr><th>Exp</th><th>HCl Conc.</th><th>Initial Temp</th><th>Final Temp</th><th>Zn State</th><th>Time (s)</th></tr></thead>
+                        <tbody>
+                            <tr><td>1</td><td>0.5</td><td>20</td><td>34</td><td>granules</td><td>50</td></tr>
+                            <tr><td>2</td><td>0.5</td><td>20</td><td>35</td><td>powder</td><td>10</td></tr>
+                            <tr><td>3</td><td>0.8</td><td>20</td><td>36</td><td>powder</td><td>6</td></tr>
+                            <tr><td>4</td><td>0.5</td><td>35</td><td>50</td><td>granules</td><td>8</td></tr>
+                            <tr><td>5</td><td>0.5</td><td>20</td><td>34</td><td>granules + catalyst</td><td>11</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <h4>4.1 Is the reaction exothermic or endothermic? Give a reason.</h4>
+                <button onclick="toggleSolution('q4-1')">Show Answer</button>
+                <div id="q4-1" class="solution"><p><b>Exothermic.</b> The temperature increases in all experiments.</p></div>
+                <h4>4.2 Give a reason for the difference in reaction rate observed for Experiments 1 and 2.</h4>
+                <button onclick="toggleSolution('q4-2')">Show Answer</button>
+                <div id="q4-2" class="solution"><p>Experiment 2 uses powder while Experiment 1 uses granules. The powder has a <b>larger surface area</b>, leading to a faster reaction rate.</p></div>
+                <h4>4.3 Give a reason why comparing Experiments 1 and 3 is not a fair comparison.</h4>
+                <button onclick="toggleSolution('q4-3')">Show Answer</button>
+                <div id="q4-3" class="solution"><p>It is not a fair comparison because <b>more than one independent variable</b> was changed. The concentration of HCl is different (0.5 vs 0.8) AND the state of division of Zn is different (granules vs powder).</p></div>
+                <h4>4.4 Compare the rate of Exp 5 to Exp 1 and explain.</h4>
+                <button onclick="toggleSolution('q4-4')">Show Answer</button>
+                <div id="q4-4" class="solution">
+                    <p><b>Faster than.</b></p>
+                    <p>A catalyst was used. A catalyst provides an alternative reaction pathway with a lower activation energy. This means more molecules have sufficient energy to react, leading to more effective collisions per unit time.</p>
+                </div>
+                <h4>4.5 Calculate the rate at which HCl reacts in Exp 4 in mol·s⁻¹.</h4>
+                 <button onclick="toggleSolution('q4-5')">Show Answer</button>
+                 <div id="q4-5" class="solution">
+<pre>
+1. Find moles of Zn used:
+   n = m / M => n = 1.2 / 65
+   n(Zn) = 0.01846 mol
+
+2. Use stoichiometry to find moles of HCl reacted:
+   Ratio Zn:HCl is 1:2
+   n(HCl reacted) = 2 * 0.01846 = 0.03692 mol
+
+3. Calculate the rate:
+   Rate = Δn / Δt
+   Rate = 0.03692 mol / 8 s
+   Rate = 4.62 x 10⁻³ mol·s⁻¹
+</pre>
+                </div>
+            </div>
+
+            <div class="exam-question">
+                <h3>Question 5: Graphing & Calculations</h3>
+                 <div class="question-stem">
+                    <p>Dilute acids react with EXCESS zinc in three experiments.</p>
+                     <table>
+                        <thead><tr><th>Experiment</th><th>Dilute Acid</th></tr></thead>
+                        <tbody>
+                            <tr><td>1</td><td>100 cm³ of 0.1 mol·dm⁻³ H₂SO₄</td></tr>
+                            <tr><td>2</td><td>50 cm³ of 0.2 mol·dm⁻³ H₂SO₄</td></tr>
+                            <tr><td>3</td><td>100 cm³ of 0.1 mol·dm⁻³ HCl</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <h4>5.1. Name TWO essential apparatuses needed to determine the rate of hydrogen production.</h4>
+                <button onclick="toggleSolution('q5-1')">Show Answer</button>
+                <div id="q5-1" class="solution"><p>Stopwatch and a Gas Syringe (or Burette/Measuring Cylinder).</p></div>
+                
+                <div class="question-stem">
+                     <p>The graph below was obtained for Experiment 1. Use this graph and answer the questions that follow.</p>
+                    <button onclick="drawQ5_Exp1_Graph()">Show Graph for Experiment 1</button>
+                    <div class="chart-container" style="height: 300px; background-color: white; display: none;" id="q5Exp1GraphContainer">
+                        <canvas id="q5Exp1Graph"></canvas>
+                    </div>
+                </div>
+
+                <h4>5.2. At which time (t₁, t₂, or t₃) is the...</h4>
+                <button onclick="toggleSolution('q5-2')">Show Answer</button>
+                <div id="q5-2" class="solution">
+                    <p><b>5.2.1 Reaction rate the highest?</b> t₁ (The gradient of the graph is steepest at the beginning).</p>
+                    <p><b>5.2.2 Mass of the zinc present in the flask the smallest?</b> t₃ (The reaction has proceeded for the longest time, consuming the most zinc).</p>
+                </div>
+
+                <h4>5.3. In which time interval, between t₁ and t₂ OR between t₂ and t₃, does the largest volume of hydrogen gas form per second?</h4>
+                <button onclick="toggleSolution('q5-3')">Show Answer</button>
+                <div id="q5-3" class="solution"><p>Between t₁ and t₂. (The slope of the graph is steeper in this interval).</p></div>
+                
+                <h4>5.4 Redraw the graph for Exp 1 and sketch graphs for Exp 2 and 3.</h4>
+                <button onclick="drawQ5Graph()">Draw All Three Graphs</button>
+                <div class="chart-container" style="height: 300px; background-color: white;"><canvas id="q5Graph"></canvas></div>
+                
+                <h4>5.5.1 The initial mass of Zn is 0.8g. Calculate the mass of zinc left after the reaction in Exp 3.</h4>
+                <button onclick="toggleSolution('q5-5-1')">Show Answer</button>
+                 <div id="q5-5-1" class="solution">
+<pre>
+1. Find moles of HCl (limiting reactant):
+   n = c * V => n = 0.1 * (100 / 1000)
+   n(HCl) = 0.01 mol
+
+2. Find moles of Zn that can react with this HCl:
+   Ratio Zn:HCl is 1:2
+   n(Zn reacted) = 0.5 * n(HCl) = 0.005 mol
+
+3. Convert moles of reacted Zn to mass:
+   m = n * M => m = 0.005 * 65
+   m(Zn reacted) = 0.325 g
+
+4. Calculate mass remaining:
+   Mass left = Initial mass - mass reacted
+   Mass left = 0.8 g - 0.325 g = 0.475 g
+</pre>
+                </div>
+                 <h4>5.6. How will the mass of the zinc present in the flask after completion of the reaction in Experiment 2 compare to the answer to QUESTION 5.5.1?</h4>
+                <button onclick="toggleSolution('q5-6')">Show Answer</button>
+                <div id="q5-6" class="solution"><p><b>Smaller than.</b> (Exp 2 has the same number of moles of H⁺ as Exp 1, but Exp 1 uses H₂SO₄ which is diprotic, providing twice the H⁺ moles as HCl in Exp 3. Therefore, more Zn reacts in Exp 2 than in Exp 3, leaving less behind).</p></div>
+            </div>
+            
+            <div class="exam-question">
+                 <h3>Question 6: Data Analysis & Graphing</h3>
+                 <div class="question-stem">
+                    <p>The reaction between methanol (CH₃OH) and HCl is investigated. \( CH_{3}OH_{(aq)} + HCl_{(aq)} \rightarrow CH_{3}Cl_{(aq)} + H_{2}O_{(l)} \)</p>
+                 </div>
+                 <h4>6.1. State TWO factors that can INCREASE the rate of this reaction.</h4>
+                 <button onclick="toggleSolution('q6-1a')">Show Answer</button>
+                 <div id="q6-1a" class="solution"><p>Increase temperature, Increase concentration of reactants, or Add a suitable catalyst.</p></div>
+                 
+                 <h4>6.2. Define the term reaction rate.</h4>
+                 <button onclick="toggleSolution('q6-2')">Show Answer</button>
+                 <div id="q6-2" class="solution"><p>The change in concentration of reactants or products per unit time.</p></div>
+
+                 <h4>6.3. The following results were obtained:</h4>
+                 <div class="question-stem">
+                    <pre>
+TIME (min) | HCl CONCENTRATION (mol·dm⁻³)
+---------------------------------------
+    0      |          1.90
+   15      |          1.45
+   55      |          1.10
+  100      |          0.85
+  215      |          0.60
+                    </pre>
+                 </div>
+                 <h4>6.3.1 Calculate the average rate during the first 15 minutes.</h4>
+                 <button onclick="toggleSolution('q6-3-1')">Show Answer</button>
+                 <div id="q6-3-1" class="solution">
+                    <p>Average rate = -Δc / Δt</p>
+                    <p>= - (1.45 - 1.90) / (15 - 0)</p>
+                    <p>= 0.45 / 15 = 0.03 mol·dm⁻³·min⁻¹</p>
+                 </div>
+
+                 <h4>6.3.2 Use the data to draw a graph of concentration versus time.</h4>
+                 <button onclick="drawQ6Graph()">Draw Animated Graph</button>
+                 <div class="chart-container" style="height: 400px; background-color: white;"><canvas id="q6Graph"></canvas></div>
+
+                 <h4>6.3.3 From the graph, determine the concentration of HCl(aq) at the 40th minute.</h4>
+                 <button onclick="toggleSolution('q6-3-3')">Show Answer</button>
+                 <div id="q6-3-3" class="solution"><p>Approximately 1.20 mol·dm⁻³ (read from the drawn graph).</p></div>
+
+                 <h4>6.3.4 Use the collision theory to explain why the reaction rate decreases with time.</h4>
+                 <button onclick="toggleSolution('q6-3-4')">Show Answer</button>
+                 <div id="q6-3-4" class="solution">
+                    <p>As the reaction proceeds, the concentration of the reactants decreases. This results in fewer particles per unit volume, which leads to a lower frequency of collisions and therefore fewer effective collisions per unit time, causing the rate to decrease.</p>
+                 </div>
+
+                 <h4>6.3.5 Calculate the mass of CH₃Cl(aq) in the flask at the 215th minute. The volume is 60 cm³.</h4>
+                 <button onclick="toggleSolution('q6-3-5')">Show Answer</button>
+                 <div id="q6-3-5" class="solution">
+<pre>
+1. Find the change in concentration of HCl:
+   Δc(HCl) = c_final - c_initial
+   Δc(HCl) = 0.60 - 1.90 = -1.3 mol·dm⁻³
+   Amount reacted = 1.3 mol·dm⁻³
+
+2. Find moles of HCl reacted:
+   n = c * V => n = 1.3 * (60 / 1000)
+   n(HCl reacted) = 0.078 mol
+
+3. Use stoichiometry to find moles of CH₃Cl formed:
+   Ratio HCl:CH₃Cl is 1:1
+   n(CH₃Cl formed) = 0.078 mol
+
+4. Convert moles of CH₃Cl to mass (M ≈ 50.5 g/mol):
+   m = n * M => m = 0.078 * 50.5
+   m(CH₃Cl) = 3.94 g
+</pre>
+                 </div>
+            </div>
+
+            <!-- More Exam Questions -->
+            <div class="factor">
+                <h2 style="color: var(--accent-yellow);">More Exam Practice</h2>
+             </div>
+            <div class="exam-question">
+                <h3>Question 7 (from May-June 2021)</h3>
+                <div class="question-stem">
+                    <p>Two experiments are conducted to investigate the rate of reaction of aluminium carbonate, Al₂(CO₃)₃, with EXCESS hydrochloric acid, HCl. \( Al_{2}(CO_{3})_{3}(s)+6HCl(aq)\rightarrow2AlCl_{3}(aq)+3H_{2}O(l)+3CO_{2}(g) \)</p>
+                    <p><b>Exp I:</b> 100 cm³ of 1.5 mol·dm⁻³ HCl reacts with 0.016 mol Al₂(CO₃)₃ granules at 25°C.</p>
+                    <p><b>Exp II:</b> 50 cm³ of 2 mol·dm⁻³ HCl reacts with 0.016 mol Al₂(CO₃)₃ granules at 25°C.</p>
+                </div>
+                <h4>5.1 Define the term rate of a reaction.</h4>
+                <button onclick="toggleSolution('q7-1')">Show Answer</button>
+                <div id="q7-1" class="solution"><p>The change in concentration/amount/volume/mass of reactants or products per unit time.</p></div>
+                
+                <h4>5.2 Using the experimental setup shown in the paper, state the measurements that must be made to determine the rate of this reaction.</h4>
+                 <button onclick="toggleSolution('q7-2')">Show Answer</button>
+                <div id="q7-2" class="solution"><p>The volume of gas (CO₂) in the gas syringe and the time taken.</p></div>
+
+                <h4>5.3 Use the collision theory to explain how the average reaction rate in Experiment I differs from Experiment II.</h4>
+                <button onclick="toggleSolution('q7-3')">Show Answer</button>
+                <div id="q7-3" class="solution"><p>Experiment II has a higher concentration of HCl (2 mol·dm⁻³ vs 1.5 mol·dm⁻³). This means there are more HCl particles per unit volume. This leads to a higher frequency of effective collisions per unit time, resulting in a higher reaction rate for Experiment II compared to Experiment I.</p></div>
+
+                <h4>5.4 The average rate of reaction in Exp II is 4.4 x 10⁻³ mol·min⁻¹. Calculate the moles of Al₂(CO₃)₃ remaining after 2.5 minutes.</h4>
+                 <button onclick="toggleSolution('q7-4')">Show Answer</button>
+                 <div id="q7-4" class="solution">
+<pre>
+1. Find moles of Al₂(CO₃)₃ reacted:
+   Rate = Δn / Δt
+   4.4 x 10⁻³ = n_reacted / 2.5
+   n_reacted = (4.4 x 10⁻³) * 2.5 = 0.011 mol
+
+2. Find moles remaining:
+   n_remaining = n_initial - n_reacted
+   n_remaining = 0.016 - 0.011 = 0.005 mol
+</pre>
+                </div>
+                <h4>5.5 Calculate the maximum volume of CO₂ that can be prepared in Exp I at 25°C (Molar volume = 24 000 cm³·mol⁻¹).</h4>
+                <button onclick="toggleSolution('q7-5')">Show Answer</button>
+                 <div id="q7-5" class="solution">
+<pre>
+1. Determine the limiting reactant in Exp I.
+   n(HCl) = cV = 1.5 * 0.1 = 0.15 mol
+   n(Al₂(CO₃)₃) = 0.016 mol
+
+   Moles HCl needed for all Al₂(CO₃)₃:
+   n(HCl) = 6 * n(Al₂(CO₃)₃) = 6 * 0.016 = 0.096 mol
+   Since we have 0.15 mol HCl (more than needed), Al₂(CO₃)₃ is the limiting reactant.
+
+2. Use stoichiometry to find moles of CO₂ produced:
+   Ratio Al₂(CO₃)₃ : CO₂ is 1:3
+   n(CO₂) = 3 * n(Al₂(CO₃)₃) = 3 * 0.016 = 0.048 mol
+
+3. Calculate the volume of CO₂:
+   V = n * Vm = 0.048 * 24000 = 1152 cm³
+</pre>
+                </div>
+            </div>
+
+             <div class="exam-question">
+                <h3>Question 8 (from Nov 2021)</h3>
+                <div class="question-stem">
+                    <p>15 g of an IMPURE sample of calcium carbonate reacts with EXCESS HCl. The graph shows the volume of CO₂ produced.</p>
+                    <button onclick="drawQ8Graph()">Draw Animated Graph</button>
+                    <div class="chart-container" style="height: 300px; background-color: white;"><canvas id="q8Graph"></canvas></div>
+                </div>
+                <h4>5.1. Define the term reaction rate.</h4>
+                <button onclick="toggleSolution('q8-1')">Show Answer</button>
+                <div id="q8-1" class="solution"><p>The change in concentration/amount/volume/mass of reactants or products per unit time.</p></div>
+
+                 <h4>5.2 Give a reason why the gradient of the graph decreases between t₂ and t₃.</h4>
+                 <button onclick="toggleSolution('q8-2')">Show Answer</button>
+                <div id="q8-2" class="solution"><p>The concentration of the reactant (HCl) is decreasing, and the surface area of the reactant (CaCO₃) is decreasing as it is consumed. This leads to a lower frequency of effective collisions, so the reaction rate slows down.</p></div>
+
+                <h4>5.3.1 Is the reaction EXOTHERMIC or ENDOTHERMIC?</h4>
+                <button onclick="toggleSolution('q8-3-1')">Show Answer</button>
+                <div id="q8-3-1" class="solution"><p>Exothermic.</p></div>
+
+                <h4>5.3.2 Explain the answer by referring to the S-shape of the graph between t₁ and t₂.</h4>
+                <button onclick="toggleSolution('q8-3-2')">Show Answer</button>
+                <div id="q8-3-2" class="solution"><p>The reaction is exothermic, so it releases heat, increasing the temperature of the mixture. Between t₁ and t₂, this increase in temperature causes the rate to increase (steeper slope). This effect initially outweighs the effect of decreasing concentration, causing the S-shape.</p></div>
+
+                 <h4>5.4 The percentage purity of the sample is 82.5%. Calculate the value of X. (Molar volume = 24 000 cm³ at 25°C).</h4>
+                <button onclick="toggleSolution('q8-4')">Show Answer</button>
+                 <div id="q8-4" class="solution">
+<pre>
+1. Calculate the mass of pure CaCO₃:
+   Mass pure = 15 g * (82.5 / 100) = 12.375 g
+
+2. Calculate moles of pure CaCO₃ (M = 100 g/mol):
+   n = m / M = 12.375 / 100 = 0.12375 mol
+
+3. Use stoichiometry to find moles of CO₂ produced:
+   Ratio CaCO₃ : CO₂ is 1:1
+   n(CO₂) = 0.12375 mol
+
+4. Calculate the volume of CO₂ (Value of X):
+   V = n * Vm = 0.12375 * 24000 = 2970 cm³
+</pre>
+                </div>
+                 <h4>5.5 How will the reaction rate change if 15 g of a PURE sample of CaCO₃ reacts with the same HCl solution? Choose from INCREASES, DECREASES or REMAINS THE SAME.</h4>
+                 <button onclick="toggleSolution('q8-5')">Show Answer</button>
+                 <div id="q8-5" class="solution"><p>Increases.</p></div>
+                 
+                 <h4>5.6 Use the collision theory to explain the answer to QUESTION 5.5.</h4>
+                <button onclick="toggleSolution('q8-6')">Show Answer</button>
+                <div id="q8-6" class="solution"><p>A pure sample has a higher concentration of reactant particles (CaCO₃) compared to an impure sample of the same mass. This leads to a higher frequency of effective collisions per unit time.</p></div>
+            </div>
+
+            <div class="exam-question">
+                <h3>Question 9 (from May-June 2022)</h3>
+                <div class="question-stem">
+                    <p>Learners use the reaction of 5 g MgCO₃(s) with EXCESS dilute HCl(aq) to investigate the relationship between temperature and reaction rate.</p>
+                    <button onclick="drawQ9Graph_RateVsTemp()">Draw Rate vs. Temp Graph</button>
+                    <div class="chart-container" style="height: 300px; background-color: white;"><canvas id="q9RateGraph"></canvas></div>
+                </div>
+                 <h4>5.1 Define the term rate of reaction.</h4>
+                <button onclick="toggleSolution('q9-1')">Show Answer</button>
+                <div id="q9-1" class="solution"><p>The change in concentration/amount/volume/mass of reactants or products per unit time.</p></div>
+                
+                <h4>5.2 State TWO conditions that must be kept constant during this investigation.</h4>
+                <button onclick="toggleSolution('q9-2')">Show Answer</button>
+                <div id="q9-2" class="solution"><p>Surface area/state of division of MgCO₃, and the concentration of HCl.</p></div>
+
+                <h4>5.3 Use the collision theory to explain the relationship shown in the graph.</h4>
+                <button onclick="toggleSolution('q9-3')">Show Answer</button>
+                <div id="q9-3" class="solution"><p>As temperature increases, the average kinetic energy of the particles increases. This means that a larger proportion of particles have kinetic energy greater than or equal to the activation energy, and particles are moving faster, increasing collision frequency. Both factors lead to an increase in the frequency of effective collisions, thus the reaction rate increases.</p></div>
+
+                <h4>5.4.1 Calculate the time taken for the reaction to run to completion at 40°C.</h4>
+                <button onclick="toggleSolution('q9-4-1')">Show Answer</button>
+                <div id="q9-4-1" class="solution">
+<pre>
+1. From the graph, the average rate at 40°C is 0.5 g·min⁻¹.
+2. Calculate moles of MgCO₃ (M ≈ 84.3 g/mol):
+   n(MgCO₃) = m / M = 5 / 84.3 = 0.0593 mol
+3. Use stoichiometry to find moles of CO₂ produced:
+   Ratio MgCO₃ : CO₂ is 1:1
+   n(CO₂) = 0.0593 mol
+4. Calculate total mass of CO₂ produced (M = 44 g/mol):
+   m(CO₂) = n * M = 0.0593 * 44 = 2.61 g
+5. Calculate time:
+   Time = Total mass / Rate = 2.61 / 0.5 = 5.22 min
+</pre>
+                </div>
+                 <h4>5.4.2 Calculate the molar gas volume at 40°C if 1.5 dm³ CO₂ is collected in a syringe.</h4>
+                <button onclick="toggleSolution('q9-4-2')">Show Answer</button>
+                <div id="q9-4-2" class="solution">
+<pre>
+From 5.4.1, the total moles of CO₂ produced is 0.0593 mol.
+Vm = V / n
+Vm = 1.5 / 0.0593 = 25.30 dm³·mol⁻¹
+</pre>
+                </div>
+                 <h4>5.5 Draw the Maxwell-Boltzmann distribution curve for CO₂ at 40°C (Curve A) and at 20°C (Curve B).</h4>
+                <button onclick="drawQ9Graph_MB()">Draw Maxwell-Boltzmann Graph</button>
+                 <div class="chart-container" style="height: 300px; background-color: white;"><canvas id="q9MBGraph"></canvas></div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        // --- UPDATED ANIMATION ENGINE ---
+        class AnimationController {
+            constructor(id, options) {
+                this.canvas = document.getElementById(id);
+                this.particles = [];
+                this.solids = [];
+                this.catalysts = [];
+                this.options = {
+                    particleCount: 30,
+                    baseSpeed: 1,
+                    types: {
+                        A: { color: 'rgba(59, 130, 246, 0.8)', size: 8 }, // Blue
+                        B: { color: 'rgba(236, 72, 153, 0.8)', size: 8 }, // Pink
+                        Product: { color: 'rgba(139, 92, 246, 0.9)', size: 10 }, // Purple
+                        Solid: { color: 'rgba(220, 38, 38, 0.9)', size: 12 }, // Red
+                        Catalyst: { color: 'rgba(107, 114, 128, 1)', size: 50 }, // Gray
+                    },
+                    ...options,
+                };
+                this.rateCounterEl = document.getElementById(this.options.counterId);
+                this.animationFrameId = null;
+                this.isRunning = false;
+                this.productCount = 0;
+                this.reset();
+            }
+
+            createParticle(type) {
+                const p = document.createElement('div');
+                p.className = 'particle';
+                const props = this.options.types[type];
+                p.style.backgroundColor = props.color;
+                p.style.boxShadow = `0 0 8px ${props.color}`;
+                p.style.width = `${props.size}px`;
+                p.style.height = `${props.size}px`;
+                this.canvas.appendChild(p);
+
+                const speed = (this.options.baseSpeed || 1) * (0.5 + Math.random());
+                const angle = Math.random() * 2 * Math.PI;
+
+                return {
+                    el: p,
+                    x: Math.random() * (this.canvas.clientWidth - props.size),
+                    y: Math.random() * (this.canvas.clientHeight - props.size),
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    size: props.size,
+                    type: type,
+                    speed: speed
+                };
+            }
+            
+            reset() {
+                this.stop();
+                this.canvas.innerHTML = '';
+                this.particles = [];
+                this.productCount = 0;
+                if (this.rateCounterEl) this.rateCounterEl.textContent = `${this.options.counterPrefix || 'Products'}: 0`;
+                
+                if (this.options.setup) this.options.setup.call(this);
+            }
+
+            start() {
+                if(this.isRunning) return;
+                this.isRunning = true;
+                this.loop();
+            }
+            stop() {
+                this.isRunning = false;
+                cancelAnimationFrame(this.animationFrameId);
+            }
+
+            loop() {
+                if (!this.isRunning) return;
+                this.update();
+                this.animationFrameId = requestAnimationFrame(() => this.loop());
+            }
+
+            update() {
+                this.particles.forEach(p => {
+                    if (p.type === 'Product' || p.type === 'Solid' || p.type === 'Catalyst') return;
+                    p.x += p.vx;
+                    p.y += p.vy;
+
+                    let bounds = this.canvas.getBoundingClientRect();
+                    if(this.options.pistonEl) {
+                        const pistonTop = this.options.pistonEl.offsetTop + this.options.pistonEl.offsetHeight;
+                        if (p.y < pistonTop) { p.y = pistonTop; p.vy *= -1; }
+                    } else {
+                        if (p.y < 0) { p.y = 0; p.vy *= -1; }
+                    }
+
+                    if (p.x < 0 || p.x > this.canvas.clientWidth - p.size) { p.vx *= -1; }
+                    if (p.y > this.canvas.clientHeight - p.size) { p.vy *= -1; }
+                    p.el.style.transform = `translate(${p.x}px, ${p.y}px)`;
+                });
+                
+                if (this.options.collisionLogic) this.options.collisionLogic.call(this);
+
+                if (this.rateCounterEl) {
+                    this.rateCounterEl.textContent = `${this.options.counterPrefix || 'Products'}: ${this.productCount}`;
+                }
+            }
+            
+            updateCount(value) { this.options.particleCount = parseInt(value); this.reset(); }
+            updateSpeed(value) { this.options.baseSpeed = parseInt(value); this.reset(); }
+            updatePressure(value) { this.options.pressure = parseInt(value); this.reset(); }
+            toggleForm() { this.options.isPowder = !this.options.isPowder; document.getElementById('surfaceToggleBtn').textContent = this.options.isPowder ? 'Use Chunk' : 'Use Powder'; this.reset(); }
+            toggleCatalyst() { this.options.hasCatalyst = !this.options.hasCatalyst; document.getElementById('catalystToggleBtn').textContent = this.options.hasCatalyst ? 'Remove Catalyst' : 'Add Catalyst'; this.reset(); }
+        }
+
+        const concentrationCollisionLogic = function() {
+             for (let i = 0; i < this.particles.length; i++) {
+                for (let j = i + 1; j < this.particles.length; j++) {
+                    const p1 = this.particles[i];
+                    const p2 = this.particles[j];
+                    if (p1.type === 'Product' || p2.type === 'Product' || p1.type === p2.type) continue;
+                    const dist = Math.hypot(p1.x - p2.x, p1.y - p2.y);
+                    if (dist < (p1.size / 2 + p2.size / 2)) {
+                        p1.type = 'Product';
+                        p2.type = 'Product';
+                        p1.el.style.backgroundColor = this.options.types.Product.color;
+                        p2.el.style.display = 'none'; // Hide one particle
+                        this.productCount++;
+                    }
+                }
+            }
+        };
+
+        const animations = {
+            concentration: new AnimationController('concentrationAnim', {
+                counterId: 'concentrationRate',
+                setup: function() {
+                    const countA = Math.ceil(this.options.particleCount / 2);
+                    const countB = this.options.particleCount - countA;
+                    for (let i = 0; i < countA; i++) this.particles.push(this.createParticle('A'));
+                    for (let i = 0; i < countB; i++) this.particles.push(this.createParticle('B'));
+                },
+                collisionLogic: concentrationCollisionLogic
+            }),
+            temperature: new AnimationController('temperatureAnim', {
+                counterId: 'temperatureRate',
+                baseSpeed: 3,
+                setup: function() {
+                    for (let i = 0; i < 15; i++) this.particles.push(this.createParticle('A'));
+                    for (let i = 0; i < 15; i++) this.particles.push(this.createParticle('B'));
+                    this.particles.forEach(p => {
+                       const tempFactor = this.options.baseSpeed / 5; // 0.2 to 2.0
+                       p.el.style.boxShadow = `0 0 ${8 + tempFactor * 8}px ${p.type === 'A' ? `rgba(59, 130, 246, ${0.5 + tempFactor*0.5})` : `rgba(236, 72, 153, ${0.5 + tempFactor*0.5})`}`;
+                    });
+                },
+                collisionLogic: function() {
+                     for (let i = 0; i < this.particles.length; i++) {
+                        for (let j = i + 1; j < this.particles.length; j++) {
+                            const p1 = this.particles[i]; const p2 = this.particles[j];
+                            if (p1.type === 'Product' || p2.type === 'Product' || p1.type === p2.type) continue;
+                            const dist = Math.hypot(p1.x - p2.x, p1.y - p2.y);
+                            if (dist < (p1.size / 2 + p2.size / 2)) {
+                                const collisionEnergy = p1.speed + p2.speed;
+                                if (collisionEnergy > 4) { // Energy threshold
+                                    p1.type = 'Product'; p2.type = 'Product';
+                                    p1.el.style.backgroundColor = this.options.types.Product.color;
+                                    p2.el.style.display = 'none';
+                                    this.productCount++;
+                                } else {
+                                    [p1.vx, p2.vx] = [p2.vx, p1.vx]; [p1.vy, p2.vy] = [p2.vy, p1.vy];
+                                }
+                            }
+                        }
+                    }
+                }
+            }),
+            surface: new AnimationController('surfaceAnim', {
+                counterId: 'surfaceRate', counterPrefix: 'Reacted', isPowder: false,
+                setup: function() {
+                    if (this.options.isPowder) {
+                        for(let i=0; i<6; i++) {
+                            for(let j=0; j<4; j++) {
+                                this.particles.push({el: this.createParticle('Solid').el, x: 50 + i*40, y: 50 + j*40, type:'Solid', size: 12});
+                            }
+                        }
+                    } else {
+                        const chunk = document.createElement('div');
+                        chunk.style.position = 'absolute';
+                        chunk.style.left = '50px'; chunk.style.top = '50px';
+                        chunk.style.width = '80px'; chunk.style.height = '150px';
+                        chunk.style.backgroundColor = this.options.types.Solid.color;
+                        chunk.style.borderRadius = '5px';
+                        this.canvas.appendChild(chunk);
+                        this.particles.push({el: chunk, x: 50, y: 50, w: 80, h: 150, type:'Chunk'});
+                    }
+                    for (let i = 0; i < 40; i++) this.particles.push(this.createParticle('A'));
+                },
+                collisionLogic: function() {
+                     this.particles.filter(p => p.type === 'A').forEach(pA => {
+                        this.particles.filter(pS => pS.type === 'Solid').forEach(pS => {
+                            const dist = Math.hypot((pA.x + pA.size/2) - (pS.x + pS.size/2), (pA.y + pA.size/2) - (pS.y + pS.size/2));
+                            if (dist < (pA.size/2 + pS.size/2)) {
+                                pS.type = 'Product'; pS.el.style.display = 'none';
+                                pA.type = 'Product'; pA.el.style.display = 'none';
+                                this.productCount++;
+                            }
+                        });
+                        this.particles.filter(pC => pC.type === 'Chunk').forEach(pC => {
+                            if (pA.x > pC.x && pA.x < pC.x + pC.w && pA.y > pC.y && pA.y < pC.y + pC.h) {
+                                pA.type = 'Product'; pA.el.style.display = 'none';
+                                this.productCount++;
+                            }
+                        });
+                    });
+                }
+            }),
+            pressure: new AnimationController('pressureAnim', {
+                counterId: 'pressureRate', pressure: 20, particleCount: 40,
+                pistonEl: document.getElementById('piston'),
+                setup: function() {
+                    if(!this.options.pistonEl) this.options.pistonEl = document.getElementById('piston');
+                    const pistonTop = (1 - this.options.pressure / 100) * (this.canvas.clientHeight - this.options.pistonEl.offsetHeight);
+                    this.options.pistonEl.style.top = `${pistonTop}px`;
+                    const countA = Math.ceil(this.options.particleCount / 2);
+                    const countB = this.options.particleCount - countA;
+                    for (let i = 0; i < countA; i++) this.particles.push(this.createParticle('A'));
+                    for (let i = 0; i < countB; i++) this.particles.push(this.createParticle('B'));
+                },
+                collisionLogic: concentrationCollisionLogic 
+            }),
+            catalyst: new AnimationController('catalystAnim', {
+                counterId: 'catalystRate', hasCatalyst: false,
+                setup: function() {
+                    if(this.options.hasCatalyst) {
+                        const cat = this.createParticle('Catalyst');
+                        cat.x = this.canvas.clientWidth / 2 - cat.size/2;
+                        cat.y = this.canvas.clientHeight / 2 - cat.size/2;
+                        cat.el.style.transform = `translate(${cat.x}px, ${cat.y}px)`;
+                        this.particles.push(cat);
+                    }
+                    for (let i = 0; i < 15; i++) this.particles.push(this.createParticle('A'));
+                    for (let i = 0; i < 15; i++) this.particles.push(this.createParticle('B'));
+                },
+                collisionLogic: function() {
+                    const catalyst = this.particles.find(p => p.type === 'Catalyst');
+                    for (let i = 0; i < this.particles.length; i++) {
+                        for (let j = i + 1; j < this.particles.length; j++) {
+                            const p1 = this.particles[i]; const p2 = this.particles[j];
+                            if (p1.type.includes('Product') || p2.type.includes('Product') || p1.type === p2.type) continue;
+                            const dist = Math.hypot(p1.x - p2.x, p1.y - p2.y);
+                            if (dist < (p1.size / 2 + p2.size / 2)) {
+                                let reactionProb = 0.001; // Low base probability
+                                if(catalyst) {
+                                    const distToCat1 = Math.hypot(p1.x - catalyst.x, p1.y - catalyst.y);
+                                    const distToCat2 = Math.hypot(p2.x - catalyst.x, p2.y - catalyst.y);
+                                    if(distToCat1 < catalyst.size || distToCat2 < catalyst.size) {
+                                        reactionProb = 0.2; // High probability on catalyst
+                                    }
+                                }
+                                if(Math.random() < reactionProb) {
+                                    p1.type = 'Product'; p2.type = 'Product';
+                                    p1.el.style.backgroundColor = this.options.types.Product.color;
+                                    p2.el.style.display = 'none';
+                                    this.productCount++;
+                                } else {
+                                    [p1.vx, p2.vx] = [p2.vx, p1.vx]; [p1.vy, p2.vy] = [p2.vy, p1.vy];
+                                }
+                            }
+                        }
+                    }
+                }
+            }),
+        };
+
+
+        // --- MAXWELL-BOLTZMANN SCRIPT ---
+        const mb_ctx = document.getElementById('mbChart').getContext('2d');
+        const mb_tempSlider = document.getElementById('mb_tempSlider');
+        const mb_eaSlider = document.getElementById('mb_eaSlider');
+        let mb_chart;
+
+        function maxwellBoltzmann(v, T) {
+            const m = 4.65e-26;
+            const k = 1.38e-23;
+            const factor1 = Math.pow(m / (2 * Math.PI * k * T), 1.5);
+            const factor2 = 4 * Math.PI * v * v;
+            const exponent = -(m * v * v) / (2 * k * T);
+            return factor1 * factor2 * Math.exp(exponent);
+        }
+
+        function updateMBChart() {
+            if (!mb_chart) return;
+            const temp = parseInt(mb_tempSlider.value);
+            const ea_speed = parseInt(mb_eaSlider.value);
+            
+            document.getElementById('tempValue').textContent = temp;
+            document.getElementById('eaValue').textContent = ea_speed;
+            document.getElementById('currentTemp').textContent = temp;
+            document.getElementById('displayTemp').textContent = `${temp} K`;
+            document.getElementById('displayEaSpeed').textContent = `${ea_speed} m/s`;
+
+            const speeds = Array.from({ length: 151 }, (_, i) => i * 25);
+            
+            const lowTempData = speeds.map(v => maxwellBoltzmann(v, 300));
+            const highTempData = speeds.map(v => maxwellBoltzmann(v, temp));
+            
+            mb_chart.data.labels = speeds;
+            mb_chart.data.datasets[0].data = lowTempData;
+            mb_chart.data.datasets[1].data = highTempData;
+            mb_chart.data.datasets[1].label = `${temp} K`;
+            
+            mb_chart.options.plugins.annotation.annotations.ea_line.xMin = ea_speed;
+            mb_chart.options.plugins.annotation.annotations.ea_line.xMax = ea_speed;
+            
+            const fillData = highTempData.map((val, i) => speeds[i] >= ea_speed ? val : null);
+            mb_chart.data.datasets[2].data = fillData;
+            
+            const totalArea = highTempData.reduce((acc, val, i) => acc + val * 25, 0);
+            const reactiveArea = fillData.reduce((acc, val) => acc + (val || 0) * 25, 0);
+            const percentage = totalArea > 0 ? (reactiveArea / totalArea * 100).toFixed(2) : 0;
+            document.getElementById('percentReactive').textContent = `${percentage}%`;
+
+            mb_chart.update('none');
+        }
+
+        function initMBChart() {
+            mb_chart = new Chart(mb_ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        { label: '300 K', data: [], borderColor: '#3498db', borderWidth: 2, pointRadius: 0, tension: 0.4 },
+                        { label: 'Higher Temp', data: [], borderColor: '#e74c3c', borderWidth: 3, pointRadius: 0, tension: 0.4 },
+                        { label: 'Reactive Molecules', data: [], backgroundColor: 'rgba(79, 209, 197, 0.25)', borderWidth: 0, pointRadius: 0, fill: 'origin' }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: {
+                        x: { title: { display: true, text: 'Molecular Speed (m/s)', color: 'var(--text-secondary)' }, ticks: { color: 'var(--text-secondary)' }, grid: { color: 'var(--border-color)'} },
+                        y: { title: { display: true, text: 'Fraction of Molecules', color: 'var(--text-secondary)' }, ticks: { color: 'var(--text-secondary)' }, grid: { color: 'var(--border-color)'} }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        title: { display: true, text: 'Distribution of Molecular Speeds', font: { size: 18, weight: '600' }, color: 'var(--text-primary)' },
+                        annotation: {
+                            annotations: {
+                                ea_line: {
+                                    type: 'line', scaleID: 'x',
+                                    xMin: 1000, xMax: 1000,
+                                    borderColor: 'var(--accent-red)',
+                                    borderWidth: 2, borderDash: [6, 6],
+                                    label: { content: 'Ea', enabled: true, position: 'start', color: 'var(--accent-red)', font: {weight: 'bold'} }
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            updateMBChart();
+            mb_tempSlider.addEventListener('input', updateMBChart);
+            mb_eaSlider.addEventListener('input', updateMBChart);
+        }
+        
+        // --- ENERGY PROFILE CHARTS LOGIC ---
+        let exothermicChart, endothermicChart;
+        let catalystIsActive = false;
+
+        const energyData = {
+            exo: { 
+                uncatalyzed: [80, 80, 190, 200, 190, 40, 40],
+                catalyzed:   [80, 80, 130, 140, 130, 40, 40] 
+            },
+            endo: { 
+                uncatalyzed: [50, 50, 210, 220, 210, 100, 100],
+                catalyzed:   [50, 50, 150, 160, 150, 100, 100]
+            }
+        };
+
+        function createEnergyChart(canvasId, data) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            const labels = ['', 'Reactants', '', 'Transition State', '', 'Products', ''];
+            
+            const r = data.uncatalyzed[1];
+            const ts_uncat = data.uncatalyzed[3];
+            const ts_cat = data.catalyzed[3];
+            const p = data.uncatalyzed[5];
+            const deltaH = p - r;
+            const ea_uncat = ts_uncat - r;
+            const ea_cat = ts_cat - r;
+
+            return new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Uncatalyzed',
+                            data: data.uncatalyzed,
+                            borderColor: 'var(--accent-orange)',
+                            borderWidth: 3,
+                            tension: 0.4,
+                            pointRadius: (context) => (context.dataIndex === 1 || context.dataIndex === 3 || context.dataIndex === 5) ? 4 : 0,
+                            pointBackgroundColor: 'var(--accent-orange)',
+                        },
+                        {
+                            label: 'Catalyzed',
+                            data: [],
+                            borderColor: 'var(--accent-blue)',
+                            borderWidth: 3,
+                            borderDash: [6, 6],
+                            tension: 0.4,
+                            pointRadius: (context) => (context.dataIndex === 1 || context.dataIndex === 3 || context.dataIndex === 5) ? 4 : 0,
+                            pointBackgroundColor: 'var(--accent-blue)',
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { display: false },
+                        annotation: {
+                            annotations: {
+                                Ea_uncat_line: {
+                                    type: 'line',
+                                    xMin: 1.5, xMax: 1.5,
+                                    yMin: r, yMax: ts_uncat,
+                                    borderColor: 'var(--accent-orange)',
+                                    borderWidth: 2,
+                                    borderDash: [2,2],
+                                    label: { content: `Ea = ${ea_uncat} kJ`, enabled: true, position: 'start', backgroundColor: 'rgba(45,55,72,0.8)', color:'var(--accent-orange)'},
+                                    arrowHeads: { start: { enabled: true }, end: { enabled: true } }
+                                },
+                                Ea_cat_line: {
+                                    type: 'line',
+                                    display: false,
+                                    xMin: 2.5, xMax: 2.5,
+                                    yMin: r, yMax: ts_cat,
+                                    borderColor: 'var(--accent-blue)',
+                                    borderWidth: 2,
+                                    borderDash: [2,2],
+                                    label: { content: `Ea = ${ea_cat} kJ`, enabled: true, position: 'start', backgroundColor: 'rgba(45,55,72,0.8)', color:'var(--accent-blue)'},
+                                    arrowHeads: { start: { enabled: true }, end: { enabled: true } }
+                                },
+                                deltaH_line: {
+                                    type: 'line',
+                                    xMin: 6, xMax: 6,
+                                    yMin: r, yMax: p,
+                                    borderColor: deltaH < 0 ? 'var(--accent-red)' : 'var(--accent-blue)',
+                                    borderWidth: 2,
+                                    label: { content: `ΔH = ${deltaH} kJ`, enabled: true, position: 'center', backgroundColor: 'rgba(45,55,72,0.8)', color: deltaH < 0 ? 'var(--accent-red)' : 'var(--accent-blue)' },
+                                    arrowHeads: { start: { enabled: true }, end: { enabled: true } }
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { title: { display: true, text: 'Reaction Progress', color: 'var(--text-secondary)'}, ticks: { color: 'var(--text-secondary)' }, grid: { display: false } },
+                        y: { title: { display: true, text: 'Potential Energy (kJ)', color: 'var(--text-secondary)' }, ticks: { color: 'var(--text-secondary)' }, grid: { color: 'var(--border-color)' } }
+                    }
+                }
+            });
+        }
+        
+        function initEnergyCharts() {
+            exothermicChart = createEnergyChart('exothermicChart', energyData.exo);
+            endothermicChart = createEnergyChart('endothermicChart', energyData.endo);
+            const exoDeltaH = energyData.exo.uncatalyzed[5] - energyData.exo.uncatalyzed[1];
+            const endoDeltaH = energyData.endo.uncatalyzed[5] - energyData.endo.uncatalyzed[1];
+            document.getElementById('exoDeltaH').innerHTML = `<strong>ΔH</strong> = ${energyData.exo.uncatalyzed[5]} - ${energyData.exo.uncatalyzed[1]} = <strong>${exoDeltaH} kJ</strong>`;
+            document.getElementById('endoDeltaH').innerHTML = `<strong>ΔH</strong> = ${energyData.endo.uncatalyzed[5]} - ${energyData.endo.uncatalyzed[1]} = <strong>+${endoDeltaH} kJ</strong>`;
+        }
+
+        function toggleCatalystEffect() {
+            catalystIsActive = !catalystIsActive;
+            
+            exothermicChart.data.datasets[1].data = catalystIsActive ? energyData.exo.catalyzed : [];
+            endothermicChart.data.datasets[1].data = catalystIsActive ? energyData.endo.catalyzed : [];
+
+            exothermicChart.options.plugins.annotation.annotations.Ea_cat_line.display = catalystIsActive;
+            endothermicChart.options.plugins.annotation.annotations.Ea_cat_line.display = catalystIsActive;
+            
+            exothermicChart.options.plugins.annotation.annotations.Ea_uncat_line.display = !catalystIsActive;
+            endothermicChart.options.plugins.annotation.annotations.Ea_uncat_line.display = !catalystIsActive;
+
+            exothermicChart.update();
+            endothermicChart.update();
+        }
+
+        // --- EXAM PRACTICE SCRIPT ---
+        const examQuestions = {
+            mcq: [
+                { q: "The rate of chemical reaction can be expressed in...", a: "C", o: ["grams per mole.", "energy consumed per mole.", "volume of gas formed per unit time.", "moles of product formed per litre of solution"] },
+                { q: "Which ONE of the following graphs shows the relationship between activation energy (Ea) of a reaction and temperature?", a: "C", o: ["A", "B", "C", "D"], graph: "q1.2" },
+                { q: "Which ONE of the following describes the effect of a positive catalyst on the net activation energy and the heat of reaction (ΔH)?", a: "D", o: ["Increases Ea, No effect on ΔH", "Decreases Ea, Increases ΔH", "No effect on Ea, Decreases ΔH", "Decreases Ea, No effect on ΔH"] },
+                { q: "For reaction A₂(g) + B₂(g) ⇌ 2AB(g), the activation energy for the forward reaction is 180 kJ and for the reverse is 200 kJ. The heat of reaction (ΔH) is...", a: "B", o: ["+20 kJ", "-20 kJ", "+380 kJ", "-380 kJ"] },
+                { q: "The rate of a chemical reaction is most correctly defined as the...", a: "D", o: ["time taken for a reaction to occur.", "speed at which a reaction takes place.", "change in the amount of reactants or products.", "change in the concentration of reactants or products per unit time."] },
+                { q: "Which ONE of the following changes will decrease both P (Ea forward) and R (Ea reverse), but leave Q (ΔH) unchanged?", a: "B", o: ["A decrease in volume", "The addition of a catalyst", "A decrease in temperature", "A decrease in concentration"], graph: "q1.6" },
+                { q: "Which factor will increase the initial rate of decomposition of CaCO₃(s) → CaO(s) + CO₂(g)?", a: "B", o: ["Pressure", "Temperature", "Concentration", "Mass of CaCO₃(s)"] },
+                { q: "The activation energy for a certain endothermic reaction is 50 kJ·mol⁻¹. Which is CORRECT for the REVERSE reaction?", a: "C", o: ["Ea > 50 kJ·mol⁻¹, ΔH > 0", "Ea > 50 kJ·mol⁻¹, ΔH < 0", "Ea < 50 kJ·mol⁻¹, ΔH < 0", "Ea < 50 kJ·mol⁻¹, ΔH > 0"] }
+            ]
+        };
+
+        function setupMCQs() {
+            const container = document.getElementById('mcq-container');
+            examQuestions.mcq.forEach((item, index) => {
+                const qIndex = index + 1;
+                let optionsHTML = '';
+                item.o.forEach((opt, optIndex) => {
+                    const optionLetter = String.fromCharCode(65 + optIndex);
+                    optionsHTML += `<label class="mcq-option"><input type="radio" name="mcq${qIndex}" value="${optionLetter}"> ${optionLetter}. ${opt}</label>`;
+                });
+                
+                let graphHTML = '';
+                if (item.graph) {
+                    graphHTML = `<div id="mcq-graph-${item.graph}" class="question-stem"></div>
+                                 <button onclick="drawMCQGraph('${item.graph}')">Show Graph(s)</button>`;
+                }
+
+                container.innerHTML += `
+                    <div class="mcq-question" style="margin-top:15px;">
+                        <h4>1.${qIndex}. ${item.q}</h4>
+                        ${graphHTML}
+                        ${optionsHTML}
+                        <button onclick="checkMCQ('mcq${qIndex}', '${item.a}')" style="margin-top:10px;">Check Answer</button>
+                        <div id="mcq${qIndex}-feedback" class="mcq-feedback" style="display:none;"></div>
+                    </div>
+                `;
+            });
+        }
+        
+        function drawMCQGraph(type) {
+            if (type === 'q1.2') {
+                const container = document.getElementById('mcq-graph-q1.2');
+                container.innerHTML = `<div class="graph-grid">
+                    <div class="graph-cell">A<canvas id="mcq1-2-A"></canvas></div>
+                    <div class="graph-cell">B<canvas id="mcq1-2-B"></canvas></div>
+                    <div class="graph-cell">C<canvas id="mcq1-2-C"></canvas></div>
+                    <div class="graph-cell">D<canvas id="mcq1-2-D"></canvas></div>
+                </div>`;
+                
+                const commonOptions = { scales: { x: { title: { display: true, text:'Temp' } }, y: { title: { display: true, text:'Ea' } } }, plugins: { legend: {display: false} } };
+                new Chart('mcq1-2-A', { type: 'line', data: { labels: [0, 1, 2, 3], datasets: [{ data: [3, 2, 1, 0] }] }, options: commonOptions });
+                new Chart('mcq1-2-B', { type: 'line', data: { labels: [0, 1, 2, 3], datasets: [{ data: [0, 1, 2, 3] }] }, options: commonOptions });
+                new Chart('mcq1-2-C', { type: 'line', data: { labels: [0, 1, 2, 3], datasets: [{ data: [2, 2, 2, 2] }] }, options: commonOptions });
+                new Chart('mcq1-2-D', { type: 'line', data: { labels: [0, 1, 2, 3], datasets: [{ data: [0, 2, 1, 1] }] }, options: commonOptions });
+            }
+             if (type === 'q1.6') {
+                const container = document.getElementById('mcq-graph-q1.6');
+                container.innerHTML = `<div class="graph-cell" style="height: 250px;"><canvas id="mcq1-6-graph"></canvas></div>`;
+                new Chart('mcq1-6-graph', {
+                    type: 'line',
+                    data: {
+                        labels: ['', 'Reactants', 'Transition State', 'Products', ''],
+                        datasets: [{ data: [20, 20, 100, 40, 40], tension: 0.4 }]
+                    },
+                    options: {
+                        plugins: {
+                            legend: { display: false },
+                            annotation: {
+                                annotations: {
+                                    P: { type: 'line', yMin: 20, yMax: 100, xMin: 1.5, xMax: 1.5, borderColor: 'black', borderWidth: 2, label: { content: 'P', enabled: true, position: 'start'}, arrowHeads: {start:true, end:true}},
+                                    Q: { type: 'line', yMin: 20, yMax: 40, xMin: 4, xMax: 4, borderColor: 'black', borderWidth: 2, label: { content: 'Q', enabled: true, position: 'center' }, arrowHeads: {start:true, end:true} },
+                                    R: { type: 'line', yMin: 40, yMax: 100, xMin: 2.5, xMax: 2.5, borderColor: 'black', borderWidth: 2, label: { content: 'R', enabled: true, position: 'end' }, arrowHeads: {start:true, end:true} }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        function checkMCQ(name, correctAnswer) {
+            const feedbackEl = document.getElementById(`${name}-feedback`);
+            const selected = document.querySelector(`input[name="${name}"]:checked`);
+            
+            if (!selected) {
+                feedbackEl.textContent = "Please select an answer.";
+                feedbackEl.style.display = 'block';
+                return;
+            }
+            
+            if (selected.value === correctAnswer) {
+                feedbackEl.textContent = "Correct!";
+                feedbackEl.style.backgroundColor = 'rgba(76, 175, 80, 0.2)';
+                feedbackEl.style.color = '#4CAF50';
+            } else {
+                feedbackEl.textContent = `Incorrect. The correct answer is ${correctAnswer}.`;
+                 feedbackEl.style.backgroundColor = 'rgba(244, 67, 54, 0.2)';
+                 feedbackEl.style.color = '#f44336';
+            }
+            feedbackEl.style.display = 'block';
+        }
+
+        function toggleSolution(id) {
+            const el = document.getElementById(id);
+            el.style.display = el.style.display === 'block' ? 'none' : 'block';
+        }
+        
+        // --- Added a new variable for the Q5 Exp 1 graph ---
+        let q2Chart, q3Chart, q5Chart, q6Chart, q5Exp1Chart;
+        let q8Chart, q9RateChart, q9MBChart; // --- New chart variables ---
+
+        function drawQ2Graph() {
+            if(q2Chart) q2Chart.destroy();
+            const ctx = document.getElementById('q2Graph').getContext('2d');
+            q2Chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [0, 10, 20, 30, 40, 50, 60],
+                    datasets: [{
+                        label: 'Graph P (Normal Temp)',
+                        data: [0.77, 0.5, 0.3, 0.18, 0.12, 0.12, 0.12],
+                        borderColor: 'var(--accent-orange)',
+                        tension: 0.2,
+                        fill: false
+                    },{
+                        label: 'Graph Q (Higher Temp)',
+                        data: [0.77, 0.4, 0.18, 0.12, 0.12, 0.12, 0.12],
+                        borderColor: 'var(--accent-red)',
+                        tension: 0.2,
+                        fill: false
+                    }]
+                },
+                options: {
+                    animation: { duration: 1500 },
+                    scales: {
+                        y: { title: { display: true, text: 'Mass of Zinc (g)' } },
+                        x: { title: { display: true, text: 'Time (s)' } }
+                    }
+                }
+            });
+        }
+        
+        function drawQ3Graph() {
+            const container = document.getElementById('q3GraphContainer');
+            container.style.display = 'block';
+            toggleSolution('q3-4');
+
+            if(q3Chart) q3Chart.destroy();
+            const ctx = document.getElementById('q3Graph').getContext('2d');
+            
+            const datasets = [
+                { label: 'A', borderColor: '#E57373', data: [0, 35, 48, 55, 60, 60], borderWidth: 2, borderDash: [5, 5] },
+                { label: 'B', borderColor: '#81C784', data: [0, 30, 40, 45, 45, 45], borderWidth: 2, borderDash: [5, 5] },
+                { label: 'C', borderColor: '#64B5F6', data: [0, 20, 35, 42, 45, 45], borderWidth: 4 }, // Highlight C
+                { label: 'D', borderColor: '#FFD54F', data: [0, 10, 25, 38, 45, 45], borderWidth: 2, borderDash: [5, 5] },
+            ];
+
+            q3Chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [0, 10, 20, 30, 40, 50],
+                    datasets: datasets
+                },
+                options: {
+                    animation: { duration: 1500 },
+                    scales: {
+                        y: { beginAtZero: true, title: { display: true, text: 'Volume CO₂ (cm³)' } },
+                        x: { title: { display: true, text: 'Time (s)' } }
+                    }
+                }
+            });
+        }
+        
+        function drawQ5_Exp1_Graph() {
+            const container = document.getElementById('q5Exp1GraphContainer');
+            container.style.display = 'block';
+            if (q5Exp1Chart) q5Exp1Chart.destroy();
+            const ctx = document.getElementById('q5Exp1Graph').getContext('2d');
+            q5Exp1Chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [0, 10, 20, 30, 40, 50],
+                    datasets: [{
+                        label: 'Experiment 1',
+                        data: [0, 15, 22, 24, 24.5, 24.5],
+                        borderColor: 'var(--accent-orange)',
+                        tension: 0.4,
+                        fill: false
+                    }]
+                },
+                options: {
+                    animation: { duration: 1000 },
+                    plugins: {
+                        legend: { display: false },
+                        annotation: {
+                            annotations: {
+                                t1: { type: 'line', scaleID: 'x', value: 1, borderColor: 'grey', borderWidth: 1, borderDash: [6, 6], label: { content: 't₁', enabled: true, position: 'bottom' } },
+                                t2: { type: 'line', scaleID: 'x', value: 2, borderColor: 'grey', borderWidth: 1, borderDash: [6, 6], label: { content: 't₂', enabled: true, position: 'bottom' } },
+                                t3: { type: 'line', scaleID: 'x', value: 3, borderColor: 'grey', borderWidth: 1, borderDash: [6, 6], label: { content: 't₃', enabled: true, position: 'bottom' } }
+                            }
+                        }
+                    },
+                     scales: {
+                        y: { beginAtZero: true, title: { display: true, text: 'Volume (cm³)' } },
+                        x: { title: { display: true, text: 'Time (s)' } }
+                    }
+                }
+            });
+        }
+
+        function drawQ5Graph() {
+            if (q5Chart) q5Chart.destroy();
+            const ctx = document.getElementById('q5Graph').getContext('2d');
+            q5Chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [0, 10, 20, 30, 40, 50, 60],
+                    datasets: [
+                        { label: 'Exp 1 (H₂SO₄)', data: [0, 15, 22, 24, 24.5, 24.5, 24.5], borderColor: 'var(--accent-orange)', tension: 0.4 },
+                        { label: 'Exp 2 (H₂SO₄, faster)', data: [0, 20, 24, 24.5, 24.5, 24.5, 24.5], borderColor: 'var(--accent-red)', tension: 0.4 },
+                        { label: 'Exp 3 (HCl, less gas)', data: [0, 8, 11, 12, 12.25, 12.25, 12.25], borderColor: 'var(--accent-blue)', tension: 0.4 }
+                    ]
+                },
+                 options: {
+                    animation: { duration: 1500 },
+                    scales: {
+                        y: { beginAtZero: true, title: { display: true, text: 'Volume (cm³)' } },
+                        x: { title: { display: true, text: 'Time (s)' } }
+                    }
+                }
+            });
+        }
+        
+        function drawQ6Graph(){
+            if(q6Chart) q6Chart.destroy();
+            const ctx = document.getElementById('q6Graph').getContext('2d');
+            const data = {
+                labels: [0, 15, 55, 100, 215],
+                datasets:[{
+                    label: 'HCl Concentration',
+                    data: [1.90, 1.45, 1.10, 0.85, 0.60],
+                    borderColor: 'var(--accent-purple)',
+                    backgroundColor: 'rgba(157, 74, 234, 0.2)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            };
+            q6Chart = new Chart(ctx, {
+                type: 'line',
+                data: data,
+                 options: {
+                    animation: { duration: 1000 },
+                    plugins: {
+                        annotation: {
+                            annotations: {
+                                point1: {
+                                    type: 'point',
+                                    xValue: 40,
+                                    yValue: 1.2,
+                                    backgroundColor: 'rgba(255, 99, 132, 0.8)',
+                                    borderColor: 'rgb(255, 99, 132)',
+                                    radius: 5,
+                                    label: {
+                                        content: '1.20 mol·dm⁻³ at 40 min',
+                                        enabled: true,
+                                        position: 'start'
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: { min: 0, title: { display: true, text: 'HCl Concentration (mol·dm⁻³)' } },
+                        x: { title: { display: true, text: 'Time (minutes)' } }
+                    }
+                }
+            });
+        }
+        
+        // --- NEW GRAPH FUNCTIONS FOR QUESTIONS 8 AND 9 ---
+
+        /**
+         * Draws the S-shaped graph for Question 8 (Nov 2021, Q5).
+         */
+        function drawQ8Graph() {
+            if(q8Chart) q8Chart.destroy();
+            const ctx = document.getElementById('q8Graph').getContext('2d');
+            q8Chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [0, 10, 20, 30, 40, 50, 60],
+                    datasets: [{
+                        label: 'Volume CO₂',
+                        data: [0, 50, 200, 280, 295, 297, 297], // Representative S-curve data
+                        borderColor: 'var(--accent-orange)',
+                        tension: 0.4,
+                        fill: false
+                    }]
+                },
+                options: {
+                    animation: { duration: 1500 },
+                     plugins: {
+                        legend: { display: false },
+                        annotation: {
+                            annotations: {
+                                t1: { type: 'line', scaleID: 'x', value: 1.5, borderColor: 'grey', borderWidth: 1, borderDash: [6, 6], label: { content: 't₁', enabled: true, position: 'bottom' } },
+                                t2: { type: 'line', scaleID: 'x', value: 2.5, borderColor: 'grey', borderWidth: 1, borderDash: [6, 6], label: { content: 't₂', enabled: true, position: 'bottom' } },
+                                t3: { type: 'line', scaleID: 'x', value: 4, borderColor: 'grey', borderWidth: 1, borderDash: [6, 6], label: { content: 't₃', enabled: true, position: 'bottom' } }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: { title: { display: true, text: 'Volume CO₂(g) (cm³)' } },
+                        x: { title: { display: true, text: 'Time (s)' } }
+                    }
+                }
+            });
+        }
+
+        /**
+         * Draws the Rate vs. Temperature graph for Question 9 (May-June 2022, Q5).
+         */
+        function drawQ9Graph_RateVsTemp() {
+            if(q9RateChart) q9RateChart.destroy();
+            const ctx = document.getElementById('q9RateGraph').getContext('2d');
+            q9RateChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [0, 10, 20, 30, 40],
+                    datasets: [{
+                        label: 'Average rate of production of CO₂',
+                        data: [0.02, 0.08, 0.2, 0.35, 0.55], // Representative data from graph
+                        borderColor: 'var(--accent-red)',
+                        tension: 0.4,
+                        fill: false
+                    }]
+                },
+                options: {
+                    animation: { duration: 1500 },
+                    scales: {
+                        y: { beginAtZero: true, title: { display: true, text: 'Average rate (g·min⁻¹)' } },
+                        x: { beginAtZero: true, title: { display: true, text: 'Temperature (°C)' } }
+                    }
+                }
+            });
+        }
+
+        /**
+         * Draws the Maxwell-Boltzmann curves for Question 9 (May-June 2022, Q5.5).
+         */
+        function drawQ9Graph_MB() {
+            if(q9MBChart) q9MBChart.destroy();
+            const ctx = document.getElementById('q9MBGraph').getContext('2d');
+            q9MBChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [0,1,2,3,4,5,6,7,8], // Relative kinetic energy
+                    datasets: [{
+                        label: 'A (40°C)',
+                        data: [0, 2, 4, 3, 2, 1, 0.5, 0.2, 0.1],
+                        borderColor: 'var(--accent-orange)',
+                        tension: 0.4,
+                        fill: false
+                    },
+                    {
+                        label: 'B (20°C)',
+                        data: [0, 3, 5, 2.5, 1, 0.5, 0.2, 0.1, 0],
+                        borderColor: 'var(--accent-blue)',
+                        tension: 0.4,
+                        fill: false
+                    }]
+                },
+                 options: {
+                    animation: { duration: 1500 },
+                    scales: {
+                        y: { beginAtZero: true, title: { display: true, text: 'Number of CO₂ molecules' } },
+                        x: { title: { display: true, text: 'Kinetic energy' } }
+                    }
+                }
+            });
+        }
+
+
+        // --- ON PAGE LOAD ---
+        window.addEventListener('load', () => {
+            initMBChart();
+            initEnergyCharts();
+            setupMCQs();
+        });
+
+    </script>
+</body>
+</html>
